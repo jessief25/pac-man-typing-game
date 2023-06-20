@@ -1,0 +1,291 @@
+#header from hw10
+
+#################################################
+# TP V.3
+#
+# Your name: Jessie Fan
+# Your andrew id: jessief
+#################################################
+
+import math, os, string, random
+from cmu_112_graphics import *
+
+#################################################
+# Helper functions
+#################################################
+
+def almostEqual(d1, d2, epsilon=10**-7):
+    # note: use math.isclose() outside 15-112 with Python version 3.5 or later
+    return (abs(d2 - d1) < epsilon)
+
+import decimal
+def roundHalfUp(d):
+    # Round to nearest with ties going away from zero.
+    rounding = decimal.ROUND_HALF_UP
+    # See other rounding options here:
+    # https://docs.python.org/3/library/decimal.html#rounding-modes
+    return int(decimal.Decimal(d).to_integral_value(rounding=rounding))
+
+#################################################
+# PLAN
+#################################################
+
+'''
+- different classes of characters 
+    - that you have to type their name or like a spell to get rid of them 
+    - if they hit you then you lose a life
+    - ig you'll have 3 lives
+    - they come at different speeds and might have different quirks
+        - the can go through walls?
+        - maybe like a zig-zag motion?
+        - random generation (from the edges of the screen)
+        - oh track the mc; where it's going change as the mc moves
+            - how do i do this??
+    - I think one of them should have like a random spell that you type to get rid of
+    - or like randomly circulate among like 3 different ones
+
+concept idea:
+- maybe like escape the nightmare
+- background randomly chooses from like a list of images (a very long list too)
+- so like yeah a lot of different places you could be
+- and then the characters would be like pretty random of like what you would have in a dream
+
+- ideas for characters:
+    - danny devito
+    - andrew carnegie
+        - type my heart is in the work to make him go away lol
+
+- levels
+    - as levels progress, different characters are introduced?
+    - the amount and speed of the characters increase
+    - the levels are like randomly generated
+        - would have like obstacles in the way 
+        - can make classes for different types of obstacles
+            - i think they would all be like pluffy cloud type things, but like different shapes
+            - or maybe make them a single block but like in the code you randomly generate like putting them together
+            - can i give them like a certain transparency so that the characters that go through them look like they're going through them
+        - so like they're an image that looks nice
+        - and they take up like certain squares on the board and can be positioned certain ways
+            - *** need to make board (rows and columns)
+        - have to make sure that there's still a path that the mc can take to get to the end
+            - generate next level with ***backtracking*** to make sure it's possible
+        - mc must collect certain number of items in the path before door is unlocked and they can go to next level
+            - ***animation*** of door rising?? when level passed??
+        - these pieces will be randomly generated (similar to food in snake game, but probably will have multiple pieces on board at once)
+        - and ofc mc has to like stay alive 
+        - keep track of high score
+    - idt i can do like an infinite number of levels (I mean like hypothetically it could get like faster and faster)
+    
+    (OH I HAVE TO KEEP TRACK OF LEVELS AND MAYBE I CAN USE IT AS A FUNCTION OF LIKE SPEED 
+    AND WHEN LEVEL >= WHATEVER, THEN CERTAIN CHARACTERS CAN BE GENERATED)
+
+-mc (class)
+    - keep track of: lives
+    - how do i keep track of high score??
+
+- how to do the type box and like inputs
+    - should probably do like a bar at the bottom 
+    - how do i like animate it so it matches what you type
+    - or like how do i make the inputs look nice
+    - so it doesn't like ask for input and then process and then ask for input
+    - i want like one box that you can type into....
+
+    - maybe like have a box and a timer and like when you press a key it goes into the box
+    - or like updates a string/list that goes into the box
+    - and like when hit enter it makes a new list (so like 2d list)
+    - and when checking the thingy to see if it matches the spell
+
+- how many levels??
+- high score? --> how will points be tracked
+    - probably should just do by level
+
+* should decide on the theme of this game --> 
+like what are the characters you're trying to escape from
+where is the MC located
+who is the MC??
+
+should it all be in one animation thing?
+
+*** i think the way you keep score (i'm not going to keep high score even when you close the window)
+is to just like not have it reset when the game ends and restarts (like it doesn't reset back to zero... )
+so might have to have a separate app started function
+
+*** is the way to make everything work together is like it's all run in one animation thing
+but like it's broken up into a lot of different like redraws and app started etc. 
+is this top down?
+
+*** how do i have it so that the mc can't walk into objects
+'''
+
+#################################################
+# Writing my functions here
+#################################################
+
+# some bits based on snake from: 
+# https://www.cs.cmu.edu/~112/notes/notes-animations-part3.html#exampleSnake
+
+def appStarted(app):
+    app.rows = 30
+    app.cols = 30
+    app.margin = 5 # margin around grid
+    app.timerDelay = 250
+
+    app.p = 0
+    
+    initChara(app)
+    initTextBox(app)
+    initPoints(app)
+    #app.waitingForFirstKeyPress = True
+
+def initTextBox(app):
+    app.text = [[]]
+
+#################################################
+# CLASSES 
+#################################################
+
+# this needs to go after appStarted (probably)
+class mc(object):
+    def __init__(self, app):
+        self.lives = 3
+        self.row = app.rows//2
+        self.col = app.cols//2
+        # not sure about this
+
+# if I'm lazy, use random word generator and it's j a typing game w generic ghost
+class cargnegie(object):
+    def __init__(slef)
+
+# is this correct and how I should do classes?
+def initChara(app):
+    app.chara = mc(app)
+
+def initPoints(app):
+    #3 points on the board at a time
+    app.points = []
+    #not sure where to put this
+    while len(app.points) < 3:
+        placePoint(app)
+
+def moveChara(app, event):
+    # MOVES THE MC
+    # it's app.chara.row - 2 because the last 2 rows are for the text box
+    if event.key == 'Up' and 0 <= app.chara.row - 1 < app.rows - 2:    
+        app.chara.row -= 1
+    elif event.key == 'Down' and 0 <= app.chara.row + 1 < app.rows - 2:  
+        app.chara.row += 1
+    elif event.key == 'Left' and 0 <= app.chara.col - 1 < app.cols:  
+        app.chara.col -= 1
+    elif event.key == 'Right' and 0 <= app.chara.col + 1 < app.cols: 
+        app.chara.col += 1
+
+def typing(app, event):
+    if event.key == "Enter":
+    # adds a new list for the next word
+        app.text.append([])
+    elif event.key == "Delete" or event.key == "Backspace":
+        if len(app.text[-1]) > 0:
+            app.text[-1].pop()
+    elif event.key == "Space":
+        app.text[-1].append(" ")
+    elif event.key in string.printable:
+        app.text[-1].append(event.key)
+
+def keyPressed(app, event):
+    #if (app.waitingForFirstKeyPress):
+        #app.waitingForFirstKeyPress = False
+    #else:
+        # like makes a list of the letters
+        # and is a 2d list; so a list of the words
+    
+    typing(app, event)
+    moveChara(app, event)
+
+    # removes points if the mc is on that square
+    if (app.chara.row,app.chara.col) in app.points:
+        app.points.remove((app.chara.row,app.chara.col))
+        app.p += 1
+    
+    placePoint(app)
+
+'''
+def timerFired(app):
+    if app.gameOver or app.waitingForFirstKeyPress: return
+    takeStep(app)
+'''
+
+# based off of placeFood in snake case study
+def placePoint(app):
+    # Keep trying random positions until we find one that is not in
+    # the snake. Note: there are more sophisticated ways to do this.
+    while(len(app.points) < 3):
+        row = random.randint(0, app.rows-1)
+        col = random.randint(0, app.cols-1)
+        if (row,col) != (app.chara.row, app.chara.col) and row < app.rows - 2: #and not in app.obstacles...
+            app.points.append((row, col))
+            return
+
+# getCellBounds from grid-demo.py
+def getCellBounds(app, row, col):
+    # aka 'modelToView'
+    # returns (x0, y0, x1, y1) corners/bounding box of given cell in grid
+    gridWidth  = app.width - 2*app.margin
+    gridHeight = app.height - 2*app.margin
+    x0 = app.margin + gridWidth * col / app.cols
+    x1 = app.margin + gridWidth * (col+1) / app.cols
+    y0 = app.margin + gridHeight * row / app.rows
+    y1 = app.margin + gridHeight * (row+1) / app.rows
+    return (x0, y0, x1, y1)
+
+# drawBoard from snake case study
+def drawBoard(app, canvas):
+    for row in range(app.rows):
+        for col in range(app.cols):
+            (x0, y0, x1, y1) = getCellBounds(app, row, col)
+            canvas.create_rectangle(x0, y0, x1, y1)
+
+def drawTextBox(app, canvas):
+    # make the textbox (height = the height of one square)
+    cellHeight = (app.height - 2*app.margin)/app.rows
+    canvas.create_rectangle(app.margin, app.height - app.margin - 2*cellHeight, 
+                            app.width - app.margin, 
+                            app.height - app.margin, fill = "light blue")
+    
+    # remember that there are [app.rows - 1] rows that the guy can move around
+
+    word1, word2, word3, word4 = "", "", "", ""
+    if len(app.text) >= 1:
+        word1 = "".join(app.text[-1])
+    if len(app.text) >= 2:
+        word2 = "".join(app.text[-2])
+    if len(app.text) >= 3:
+        word3 = "".join(app.text[-3])
+    if len(app.text) >= 4:
+        word4 = "".join(app.text[-4])
+
+    canvas.create_text(app.margin*2, app.height - app.margin, 
+                       text = (word4 + "\n" + word3 + "\n" + 
+                               word2 + "\n" + word1), 
+                       anchor = "sw", font="Times 10 bold italic")
+
+def drawPoint(app, canvas):
+    for i in range(len(app.points)):
+        (row, col) = app.points[i]
+
+        (x0, y0, x1, y1) = getCellBounds(app, row, col)
+        canvas.create_oval(x0, y0, x1, y1, fill='green')
+
+def redrawAll(app, canvas):
+    drawBoard(app, canvas)
+    drawTextBox(app, canvas)
+    drawPoint(app, canvas)
+
+    # draw the mc (he's j a circle for now)
+    (x0, y0, x1, y1) = getCellBounds(app, app.chara.row, app.chara.col)
+    canvas.create_oval(x0, y0, x1, y1, fill='blue')
+
+    #prints how many points collected
+    canvas.create_text(0,0, anchor = "nw", text = f'points: {app.p}')
+
+runApp(width=600, height=600)
+
